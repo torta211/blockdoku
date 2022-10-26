@@ -5,17 +5,18 @@ from visu import Visualizer
 
 
 class Game:
-    def __init__(self, visu=None, verbose=True):
+    def __init__(self, visu=None, verbose=True, wait=500):
         self.field = create_field()
         self.streak_cnt = 0
         self.score = 0
         self.current_pieces = [None, None, None]
         self.verbose = verbose
         self.visu = visu
+        self.wait = wait
 
-    def update_visu(self, wait=0):
+    def update_visu(self, wait=None):
         if self.visu is not None:
-            self.visu.show_state(self.field, self.current_pieces, wait)
+            self.visu.show_state(self.field, self.current_pieces, wait if wait else self.wait)
 
     def get_new_pieces(self):
         self.current_pieces = [create_random_piece(),
@@ -23,7 +24,7 @@ class Game:
                                create_random_piece()]
         self.update_visu()
 
-    def after_placement(self, start_i, start_j, placed_piece_index):
+    def do_place(self, start_i, start_j, placed_piece_index):
         piece_height = self.current_pieces[placed_piece_index].shape[0]
         piece_width = self.current_pieces[placed_piece_index].shape[1]
         piece_score = np.sum(self.current_pieces[placed_piece_index])
@@ -75,22 +76,32 @@ class Game:
                     if np.max(self.field[row: row + piece_height, col: col + piece_width] + piece) == 1:
                         return row, col
             return -1, -1
-        for i in range(3):
-            start_i, start_j = place_one(self.current_pieces[i])
-            if start_i + start_j >= 0:
-                self.after_placement(start_i, start_j, i)
-            else:
-                return False
-        return True
+        fail = False
+        success = False
+        while not fail and not success:
+            could_place_one = False
+            for i in range(3):
+                if self.current_pieces[i] is None:
+                    continue
+                start_i, start_j = place_one(self.current_pieces[i])
+                if start_i + start_j >= 0:
+                    self.do_place(start_i, start_j, i)
+                    could_place_one = True
+            if not could_place_one:
+                if all(piece is None for piece in self.current_pieces):
+                    success = True
+                else:
+                    fail = True
+        return success
 
 
 if __name__ == '__main__':
-    game = Game(visu=Visualizer())
+    game = Game(visu=Visualizer(), verbose=False)
     game_over = False
     while not game_over:
         game.get_new_pieces()
         game_over = not game.play_pieces_naive()
-    print("GAME OVER")
+    print(f"SCORE = {game.score}")
 
 
 
