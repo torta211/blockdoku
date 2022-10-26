@@ -120,7 +120,7 @@ PIECES = [
 
 
 def create_random_piece():
-    return PIECES[random.randint(0, len(PIECES) - 1)]
+    return PIECES[random.randint(0, len(PIECES) - 1)].copy()
 
 
 def create_field():
