@@ -7,7 +7,7 @@ COLOR_BG = np.array([181, 228, 255])
 COLOR_PIECES_PART = np.array([231, 248, 255])
 COLOR_PIECE = np.array([19, 69, 139])
 COLOR_BLACK = np.array([0, 0, 0])
-COLOR_GRAY = np.array([143, 143, 188])
+COLOR_GRAY = np.array([153, 153, 192])
 
 BLOCK_SIZE_PIXEL = 50
 LINE_SIZE_PIXEL = 3
