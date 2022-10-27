@@ -7,6 +7,27 @@ from pieces import create_random_piece, create_field
 from visu import Visualizer
 
 
+def get_to_clear_of_state(field):
+    rows_to_clear = []
+    cols_to_clear = []
+    squares_to_clear = []
+    to_clear = create_field()
+    for row in range(9):
+        if np.sum(field[row, :]) == 9:
+            rows_to_clear.append(row)
+            to_clear[row, :] = 1
+    for col in range(9):
+        if np.sum(field[:, col]) == 9:
+            cols_to_clear.append(col)
+            to_clear[:, col] = 1
+    for i in range(3):
+        for j in range(3):
+            if np.sum(field[3 * i: 3 * i + 3, 3 * j: 3 * j + 3]) == 9:
+                squares_to_clear.append((i, j))
+                to_clear[3 * i: 3 * i + 3, 3 * j: 3 * j + 3] = 1
+    return to_clear, len(rows_to_clear) + len(cols_to_clear) + len(squares_to_clear)
+
+
 class Game:
     def __init__(self, visu=True, verbose=True, wait=500):
         self.field = create_field()
@@ -39,43 +60,33 @@ class Game:
                   self.current_pieces[placed_piece_index]) > 1:
             raise Exception("Invalid move: attempted to place a piece at an occupied location!")
         piece_score = np.sum(self.current_pieces[placed_piece_index])
+        self.score += piece_score
+        if self.verbose:
+            print(f"{self.score} - placed piece {placed_piece_index} (+ {piece_score})")
+        # negative numbers are only for visu, we basically add the piece to the field (/board) and remove it from set
+        #   highlighting placed piece with negative value
         self.current_pieces[placed_piece_index] *= -1
+        #   highlighting placement with negative value
         self.field[start_i: start_i + piece_height, start_j: start_j + piece_width] += self.current_pieces[placed_piece_index]
         self.__update_visu()
+        #   adding piece (was multiplied by -1)
         self.field[start_i: start_i + piece_height, start_j: start_j + piece_width] -= self.current_pieces[placed_piece_index] * 2
-        if self.verbose:
-            print(f"placed piece {placed_piece_index} (+ {piece_score})")
-        self.score += piece_score
         self.current_pieces[placed_piece_index] = None
-        rows_to_clear = []
-        cols_to_clear = []
-        squares_to_clear = []
-        to_clear = create_field()
-        for row in range(9):
-            if np.sum(self.field[row, :]) == 9:
-                rows_to_clear.append(row)
-                to_clear[row, :] = 1
-        for col in range(9):
-            if np.sum(self.field[:, col]) == 9:
-                cols_to_clear.append(col)
-                to_clear[:, col] = 1
-        for i in range(3):
-            for j in range(3):
-                if np.sum(self.field[3 * i: 3 * i + 3, 3 * j: 3 * j + 3]) == 9:
-                    squares_to_clear.append((i, j))
-                    to_clear[3 * i: 3 * i + 3, 3 * j: 3 * j + 3] = 1
-        combo = len(rows_to_clear) + len(cols_to_clear) + len(squares_to_clear)
+        # calcu
+        to_clear, combo = get_to_clear_of_state(self.field)
         score = np.sum(to_clear)
         self.__update_visu()
         if combo > 0:
             self.streak_cnt += 1
             self.score += self.streak_cnt * combo * score
+            # highlight to_clear
             self.field -= 2 * to_clear
             self.__update_visu()
+            if self.verbose:
+                print(f"{self.score} - combo x{combo}, Streak x{self.streak_cnt}, +{self.streak_cnt * combo * score}")
+            # remove to_clear
             self.field += to_clear
             self.__update_visu()
-            if self.verbose:
-                print(f"Combo x{combo}, Streak x{self.streak_cnt}, +{self.streak_cnt * combo * score}")
         else:
             self.streak_cnt = 0
 
