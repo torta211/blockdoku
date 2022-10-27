@@ -1,9 +1,10 @@
 import numpy as np
 
 from game import Game, get_to_clear_of_state
+from strategies.builder_game import get_border_length
 
 
-class GreedyGame(Game):
+class GreedyBuilderGame(Game):
 
     def play_pieces(self):
         def get_max_score_of_piece(piece):
@@ -18,6 +19,8 @@ class GreedyGame(Game):
                         field_with_placement[row: row + piece_height, col: col + piece_width] += piece
                         to_clear, combo = get_to_clear_of_state(field_with_placement)
                         score_here = np.sum(to_clear) * (self.streak_cnt + 1) * combo + piece_score
+                        if combo == 0:
+                            score_here += 1 / get_border_length(field_with_placement)
                         if score_here > max_score:
                             max_score = score_here
                             max_place = [row, col]
@@ -52,7 +55,7 @@ class GreedyGame(Game):
 
 
 if __name__ == '__main__':
-    game = GreedyGame(visu=True, verbose=True, wait=750)
+    game = GreedyBuilderGame(visu=True, verbose=True, wait=750)
     game_over = False
     while not game_over:
         game.get_new_pieces()
