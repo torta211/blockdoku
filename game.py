@@ -8,23 +8,18 @@ from visu import Visualizer
 
 
 def get_to_clear_of_state(field):
-    rows_to_clear = []
-    cols_to_clear = []
+    rows_to_clear = np.where(np.sum(field, axis=1) == 9)[0]
+    cols_to_clear = np.where(np.sum(field, axis=0) == 9)[0]
     squares_to_clear = []
     to_clear = create_field()
-    for row in range(9):
-        if np.sum(field[row, :]) == 9:
-            rows_to_clear.append(row)
-            to_clear[row, :] = 1
-    for col in range(9):
-        if np.sum(field[:, col]) == 9:
-            cols_to_clear.append(col)
-            to_clear[:, col] = 1
+    to_clear[rows_to_clear, :] = 1
+    to_clear[:, cols_to_clear] = 1
     for i in range(3):
+        row_start = 3 * i
         for j in range(3):
-            if np.sum(field[3 * i: 3 * i + 3, 3 * j: 3 * j + 3]) == 9:
+            if np.sum(field[row_start: row_start + 3, 3 * j: 3 * j + 3]) == 9:
                 squares_to_clear.append((i, j))
-                to_clear[3 * i: 3 * i + 3, 3 * j: 3 * j + 3] = 1
+                to_clear[row_start: row_start + 3, 3 * j: 3 * j + 3] = 1
     return to_clear, len(rows_to_clear) + len(cols_to_clear) + len(squares_to_clear)
 
 
