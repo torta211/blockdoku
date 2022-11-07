@@ -1,6 +1,7 @@
 import numpy as np
 
 from game import Game, get_to_clear_of_state
+from strategies.builder_game import get_border_length
 
 
 class ExtremeGreedyGame(Game):
@@ -51,7 +52,8 @@ class ExtremeGreedyGame(Game):
                                 if np.max(field_after_third[r2: r2 + piece_height_2, c2: c2 + piece_width_2]) > 1:
                                     continue
                                 to_clear, combo = get_to_clear_of_state(field_after_third)
-                                score_after_third = score_after_second + np.sum(to_clear) * (streak_after_second + 1) * combo + piece_score_2
+                                border_length = get_border_length(field_after_third - to_clear)
+                                score_after_third = score_after_second + np.sum(to_clear) * (streak_after_second + 1) * combo + piece_score_2 + 1 / border_length
                                 if score_after_third > max_so_far:
                                     max_so_far = score_after_third
                                     max_place = (r0, c0, r1, c1, r2, c2)
